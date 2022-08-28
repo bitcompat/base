@@ -41,8 +41,8 @@ jobs:
           context: ${{ inputs.path }}
           tags: library-build:latest
           load: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ inputs.name }}-${{ matrix.platform }}
+          cache-to: type=gha,mode=max,scope=${{ inputs.name }}-${{ matrix.platform }}
 
       - name: Extract compiled library
         run: |
