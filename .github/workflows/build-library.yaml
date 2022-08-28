@@ -19,7 +19,6 @@ jobs:
       matrix:
         platform:
           - amd64
-          - arm64
 
     name: Build ${{ inputs.name }} library - ${{ matrix.platform }}
     runs-on: ubuntu-latest
