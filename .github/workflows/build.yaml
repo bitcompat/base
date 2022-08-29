@@ -67,6 +67,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Cleanup image tag input
+        id: cleanup_image_tag
+        run: |
+          CLEANED_UP=$(echo "$IMAGE_TAGS" | sed 's/ #.*//')
+          CLEANED_UP="${CLEANED_UP//'%'/'%25'}"
+          CLEANED_UP="${CLEANED_UP//$'\n'/'%0A'}"
+          CLEANED_UP="${CLEANED_UP//$'\r'/'%0D'}"
+          echo "::set-output name=image_tags::${CLEANED_UP}"
+        env:
+          IMAGE_TAGS: ${{ inputs.image_tag }}
+
       - id: docker_meta
         name: Extract docker image metadata
         uses: docker/metadata-action@v3.6.0
@@ -75,7 +86,7 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
             public.ecr.aws/u5n3t0n5/${{ github.event.repository.name }}
           tags: |
-            ${{ inputs.image_tag }}
+            ${{ steps.cleanup_image_tag.outputs.image_tags }}
             type=sha
             type=sha,format=long
 
