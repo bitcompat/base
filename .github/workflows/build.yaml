@@ -9,6 +9,9 @@ on:
       build-args:
         type: string
         default: ''
+      cache-scope:
+        type: string
+        default: 'buildkit'
       image_tag:
         type: string
         required: true
@@ -84,7 +87,7 @@ jobs:
         with:
           images: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
-            public.ecr.aws/u5n3t0n5/${{ github.event.repository.name }}
+            public.ecr.aws/bitcompat/${{ github.event.repository.name }}
           tags: |
             ${{ steps.cleanup_image_tag.outputs.image_tags }}
             type=sha
@@ -98,8 +101,8 @@ jobs:
           push: true
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ inputs.cache-scope }}
+          cache-to: type=gha,mode=max,scope=${{ inputs.cache-scope }}
 
       - name: Sign image with a key
         run: |
