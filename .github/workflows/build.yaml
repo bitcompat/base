@@ -83,7 +83,7 @@ jobs:
           CLEANED_UP="${CLEANED_UP//'%'/'%25'}"
           CLEANED_UP="${CLEANED_UP//$'\n'/'%0A'}"
           CLEANED_UP="${CLEANED_UP//$'\r'/'%0D'}"
-          echo "::set-output name=image_tags::${CLEANED_UP}"
+          echo "image_tags=${CLEANED_UP}" >> $GITHUB_OUTPUT
         env:
           IMAGE_TAGS: ${{ inputs.image_tag }}
 
