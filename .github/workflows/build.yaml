@@ -59,12 +59,14 @@ jobs:
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
+        if: github.repository_owner == 'bitcompat'
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-1
 
       - name: Login to Amazon ECR Public
         uses: aws-actions/amazon-ecr-login@v1
+        if: github.repository_owner == 'bitcompat'
         with:
           registry-type: public
 
@@ -93,7 +95,7 @@ jobs:
         with:
           images: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
-            public.ecr.aws/bitcompat/${{ github.event.repository.name }}
+            public.ecr.aws/bitcompat/${{ github.event.repository.name }},enable=${{ github.repository_owner == 'bitcompat' }}
           tags: |
             ${{ steps.cleanup_image_tag.outputs.image_tags }}
             type=sha
