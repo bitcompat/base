@@ -8,14 +8,20 @@ on:
         type: string
       build-args:
         type: string
+        required: false
         default: ''
       cache-scope:
         type: string
+        required: false
         default: 'buildkit'
       image_tag:
         type: string
         required: true
         default: 'latest'
+      push:
+        type: boolean
+        required: false
+        default: true
     secrets:
       AWS_ROLE_ARN:
         required: true
@@ -98,7 +104,7 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64
           build-args: ${{ inputs.build-args }}
-          push: true
+          push: ${{ inputs.push }}
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
           cache-from: type=gha,scope=${{ inputs.cache-scope }}

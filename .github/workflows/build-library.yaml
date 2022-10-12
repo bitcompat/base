@@ -11,6 +11,7 @@ on:
         type: string
       output_path:
         type: string
+        required: false
         default: /opt/bitnami
 
 jobs:
