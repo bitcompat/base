@@ -82,10 +82,9 @@ jobs:
         id: cleanup_image_tag
         run: |
           CLEANED_UP=$(echo "$IMAGE_TAGS" | sed 's/ #.*//')
-          CLEANED_UP="${CLEANED_UP//'%'/'%25'}"
-          CLEANED_UP="${CLEANED_UP//$'\n'/'%0A'}"
-          CLEANED_UP="${CLEANED_UP//$'\r'/'%0D'}"
-          echo "image_tags=${CLEANED_UP}" >> $GITHUB_OUTPUT
+          echo "image_tags<<EOF" >> $GITHUB_OUTPUT
+          echo "${CLEANED_UP}" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
         env:
           IMAGE_TAGS: ${{ inputs.image_tag }}
 
