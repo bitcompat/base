@@ -14,14 +14,25 @@ on:
         type: string
         required: false
         default: 'buildkit'
-      image_tag:
-        type: string
-        required: true
-        default: 'latest'
       push:
         type: boolean
         required: false
         default: true
+      version:
+        type: string
+        required: true
+      revision:
+        type: string
+        required: false
+        default: '1'
+      debian_codename:
+        type: string
+        required: false
+        default: bullseye
+      latest:
+        type: boolean
+        required: false
+        default: false
     secrets:
       AWS_ROLE_ARN:
         required: true
@@ -52,6 +63,26 @@ jobs:
       - name: Install Cosign
         uses: sigstore/cosign-installer@main
 
+      - uses: actions/github-script@v6
+        id: version-tags
+        env:
+          VERSION: '${{ inputs.version }}'
+          REVISION: '${{ inputs.revision }}'
+          CODENAME: '${{ inputs.debian_codename }}'
+        with:
+          result-encoding: string
+          script: |
+            const { REVISION: revision, VERSION: version, CODENAME: codename } = process.env;
+            const [ major, minor, patch ] = version.split('.').filter(V => '' !== V);
+            
+            return `
+            ${major}.${minor}.${patch}-${codename}-r${revision}
+            ${major}.${minor}.${patch}-${codename}
+            ${major}.${minor}.${patch}
+            ${major}.${minor}-${codename}
+            ${major}.${minor}
+            `;
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
@@ -81,16 +112,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Cleanup image tag input
-        id: cleanup_image_tag
-        run: |
-          CLEANED_UP=$(echo "$IMAGE_TAGS" | sed 's/ #.*//')
-          echo "image_tags<<EOF" >> $GITHUB_OUTPUT
-          echo "${CLEANED_UP}" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-        env:
-          IMAGE_TAGS: ${{ inputs.image_tag }}
-
       - id: docker_meta
         name: Extract docker image metadata
         uses: docker/metadata-action@v4.3.0
@@ -99,7 +120,8 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
             public.ecr.aws/bitcompat/${{ github.event.repository.name }},enable=${{ github.repository_owner == 'bitcompat' }}
           tags: |
-            ${{ steps.cleanup_image_tag.outputs.image_tags }}
+            ${{ inputs.latest && 'latest' || '' }}
+            ${{ steps.version-tags.outputs.result }}
             type=sha
             type=sha,format=long
 
