@@ -21,6 +21,10 @@ on:
       version:
         type: string
         required: true
+      major_only_tag:
+        type: boolean
+        default: false
+        required: false
       revision:
         type: string
         required: false
@@ -69,10 +73,11 @@ jobs:
           VERSION: '${{ inputs.version }}'
           REVISION: '${{ inputs.revision }}'
           CODENAME: '${{ inputs.debian_codename }}'
+          MAJOR_ONLY: ${{ inputs.major_only_tag && '1' || '0' }}
         with:
           result-encoding: string
           script: |
-            const { REVISION: revision, VERSION: version, CODENAME: codename } = process.env;
+            const { REVISION: revision, VERSION: version, CODENAME: codename, MAJOR_ONLY: majorOnly } = process.env;
             const [ major, minor, patch ] = version.split('.').filter(V => '' !== V);
             
             return `
@@ -81,6 +86,7 @@ jobs:
             ${major}.${minor}.${patch}
             ${major}.${minor}-${codename}
             ${major}.${minor}
+            ${majorOnly ? major : ''}
             `;
 
       - name: Set up QEMU
