@@ -135,7 +135,9 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           platforms: linux/amd64,linux/arm64
-          build-args: ${{ inputs.build-args }}
+          build-args: |-
+            ${{ inputs.build-args }}
+            BUILD_VERSION=${{ inputs.version }}
           push: ${{ inputs.push }}
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
