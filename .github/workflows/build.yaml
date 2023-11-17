@@ -32,7 +32,7 @@ on:
       debian_codename:
         type: string
         required: false
-        default: bullseye
+        default: bookworm
       latest:
         type: boolean
         required: false
