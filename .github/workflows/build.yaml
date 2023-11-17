@@ -109,6 +109,7 @@ jobs:
         if: github.repository_owner == 'bitcompat'
         with:
           registry-type: public
+          mask-password: 'true'
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
@@ -143,6 +144,18 @@ jobs:
           labels: ${{ steps.docker_meta.outputs.labels }}
           cache-from: type=gha,scope=${{ inputs.cache-scope }}
           cache-to: type=gha,mode=max,scope=${{ inputs.cache-scope }}
+
+      - name: Setup CRANE
+        uses: imjasonh/setup-crane@v0.1
+
+      - name: Login to ECR Public in CRANE
+        run: crane auth login public.ecr.aws -u "${{ docker_username_public_ecr_aws }}" -p "${{ docker_password_public_ecr_aws }}"
+
+      - name: Flatten images
+        run: |
+          for IMG in "${{ steps.docker_meta.outputs.tags }}"; do
+            crane flatten "$IMG"
+          done
 
       - name: Sign image with a key
         run: |
