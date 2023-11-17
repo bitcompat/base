@@ -106,6 +106,7 @@ jobs:
 
       - name: Login to Amazon ECR Public
         uses: aws-actions/amazon-ecr-login@v2
+        id: login-ecr
         if: github.repository_owner == 'bitcompat'
         with:
           registry-type: public
@@ -149,13 +150,14 @@ jobs:
         uses: imjasonh/setup-crane@v0.1
 
       - name: Login to ECR Public in CRANE
-        run: crane auth login public.ecr.aws -u "${{ docker_username_public_ecr_aws }}" -p "${{ docker_password_public_ecr_aws }}"
+        run: crane auth login public.ecr.aws -u "${{ steps.login-ecr.outputs.docker_username_public_ecr_aws }}" -p "${{ steps.login-ecr.outputs.docker_password_public_ecr_aws }}"
 
       - name: Flatten images
         run: |
-          for IMG in "${{ steps.docker_meta.outputs.tags }}"; do
-            crane flatten "$IMG"
-          done
+          echo $DOCKER_METADATA_OUTPUT_JSON | jq -r '.tags[]' | 
+            while read -r IMG; do
+              crane flatten "$IMG"
+            done
 
       - name: Sign image with a key
         run: |
