@@ -55,7 +55,7 @@ jobs:
           tar -cf build.tar build/
 
       - name: Uploads compiled library artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.name }}-${{ matrix.platform }}
           path: build.tar
