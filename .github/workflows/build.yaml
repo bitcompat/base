@@ -147,7 +147,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ inputs.cache-scope }}
 
       - name: Setup CRANE
-        uses: imjasonh/setup-crane@v0.3
+        uses: imjasonh/setup-crane@v0.4
 
       - name: Login to ECR Public in CRANE
         run: crane auth login public.ecr.aws -u "${{ steps.login-ecr.outputs.docker_username_public_ecr_aws }}" -p "${{ steps.login-ecr.outputs.docker_password_public_ecr_aws }}"
