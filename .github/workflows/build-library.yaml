@@ -39,7 +39,7 @@ jobs:
             image=moby/buildkit:v0.12.3
 
       - name: Build container
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           platforms: linux/${{ matrix.platform }}
           context: ${{ inputs.path }}
