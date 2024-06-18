@@ -36,7 +36,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
         with:
           driver-opts: |
-            image=moby/buildkit:v0.12.3
+            image=moby/buildkit:v0.14.0
 
       - name: Build container
         uses: docker/build-push-action@v6
