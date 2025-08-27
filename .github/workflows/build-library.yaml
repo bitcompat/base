@@ -19,11 +19,11 @@ jobs:
     strategy:
       matrix:
         platform:
-          - amd64
-          - arm64
+          - { name: amd64, image: ubuntu-24.04 }
+          - { name: arm64, image: ubuntu-24.04-arm }
 
-    name: Build ${{ inputs.name }} library - ${{ matrix.platform }}
-    runs-on: ubuntu-latest
+    name: Build ${{ inputs.name }} library - ${{ matrix.platform.name }}
+    runs-on: ${{ matrix.platform.image }}
 
     steps:
       - uses: actions/checkout@master
@@ -36,17 +36,17 @@ jobs:
         uses: docker/setup-buildx-action@v3
         with:
           driver-opts: |
-            image=moby/buildkit:v0.14.0
+              image=moby/buildkit:v0.23.2
 
       - name: Build container
         uses: docker/build-push-action@v6
         with:
-          platforms: linux/${{ matrix.platform }}
+          platforms: linux/${{ matrix.platform.name }}
           context: ${{ inputs.path }}
           tags: library-build:latest
           load: true
-          cache-from: type=gha,scope=${{ inputs.name }}-${{ matrix.platform }}
-          cache-to: type=gha,mode=max,scope=${{ inputs.name }}-${{ matrix.platform }}
+          cache-from: type=gha,scope=${{ inputs.name }}-${{ matrix.platform.name }}
+          cache-to: type=gha,mode=max,scope=${{ inputs.name }}-${{ matrix.platform.name }}
 
       - name: Extract compiled library
         run: |
@@ -57,5 +57,5 @@ jobs:
       - name: Uploads compiled library artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.name }}-${{ matrix.platform }}
+          name: ${{ inputs.name }}-${{ matrix.platform.name }}
           path: build.tar

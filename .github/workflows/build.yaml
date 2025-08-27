@@ -37,6 +37,10 @@ on:
         type: boolean
         required: false
         default: false
+      buildkit_version:
+        type: string
+        required: false
+        default: 0.23.2
     secrets:
       AWS_ROLE_ARN:
         required: true
@@ -50,9 +54,64 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  build_package_amd64:
+      name: Build AMD64 Image - ${{ inputs.name }}
+      runs-on: ubuntu-24.04
+
+      steps:
+          - uses: actions/checkout@master
+            with:
+                fetch-depth: 1
+
+          - name: Set up Docker Buildx
+            uses: docker/setup-buildx-action@v3
+            with:
+                driver-opts: |
+                    image=moby/buildkit:v${{ inputs.buildkit_version }}
+
+          - name: Build and Push container images
+            uses: docker/build-push-action@v6
+            with:
+                platforms: linux/amd64
+                build-args: |-
+                    ${{ inputs.build-args }}
+                    BUILD_VERSION=${{ inputs.version }}
+                push: false
+                cache-from: type=gha,scope=${{ inputs.cache-scope }}
+                cache-to: type=gha,mode=max,scope=${{ inputs.cache-scope }}
+
+  build_package_arm64:
+      name: Build ARM64 Image - ${{ inputs.name }}
+      runs-on: ubuntu-24.04-arm
+
+      steps:
+          - uses: actions/checkout@master
+            with:
+                fetch-depth: 1
+
+          - name: Set up Docker Buildx
+            uses: docker/setup-buildx-action@v3
+            with:
+                driver-opts: |
+                    image=moby/buildkit:v${{ inputs.buildkit_version }}
+
+          - name: Build and Push container images
+            uses: docker/build-push-action@v6
+            with:
+                platforms: linux/arm64
+                build-args: |-
+                    ${{ inputs.build-args }}
+                    BUILD_VERSION=${{ inputs.version }}
+                push: false
+                cache-from: type=gha,scope=${{ inputs.cache-scope }}-arm
+                cache-to: type=gha,mode=max,scope=${{ inputs.cache-scope }}-arm
+
   build_package:
     name: Build package - ${{ inputs.name }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    needs:
+        - build_package_amd64
+        - build_package_arm64
 
     permissions:
       contents: read
@@ -143,7 +202,9 @@ jobs:
           push: ${{ inputs.push }}
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
-          cache-from: type=gha,scope=${{ inputs.cache-scope }}
+          cache-from: |-
+            type=gha,scope=${{ inputs.cache-scope }}
+            type=gha,scope=${{ inputs.cache-scope }}-arm
           cache-to: type=gha,mode=max,scope=${{ inputs.cache-scope }}
 
       - name: Setup CRANE
