@@ -126,39 +126,12 @@ jobs:
       - name: Install Cosign
         uses: sigstore/cosign-installer@main
 
-      - uses: actions/github-script@v7
+      - uses: bitcompat/compute-ghcr-revision-action@v1
         id: version-tags
-        env:
-          VERSION: '${{ inputs.version }}'
-          REVISION: '${{ inputs.revision }}'
-          CODENAME: '${{ inputs.debian_codename }}'
-          MAJOR_ONLY: ${{ inputs.major_only_tag && '1' || '0' }}
         with:
-          result-encoding: string
-          script: |
-            let retVal = "";
-            const { REVISION: revision, VERSION: version, CODENAME: codename, MAJOR_ONLY: majorOnly } = process.env;
-            let [ major, minor, patch ] = version.split('.').filter(V => '' !== V);
-            if (major === undefined) {
-              throw new Error('Invalid version number');
-            }
-            if (minor === undefined) {
-              minor = 0;
-            }
-            if (patch === undefined) {
-              patch = 0;
-              retVal += `
-                ${major}.${minor}-${codename}-r${revision}`;
-            }
-            
-            return retVal + `
-            ${major}.${minor}.${patch}-${codename}-r${revision}
-            ${major}.${minor}.${patch}-${codename}
-            ${major}.${minor}.${patch}
-            ${major}.${minor}-${codename}
-            ${major}.${minor}
-            ${majorOnly ? major : ''}
-            `;
+          version: '${{ inputs.version }}'
+          debian_codename: '${{ inputs.debian_codename }}'
+          major_only_tag: ${{ inputs.major_only_tag && 'true' || 'false' }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -200,7 +173,7 @@ jobs:
             public.ecr.aws/bitcompat/${{ github.event.repository.name }},enable=${{ github.repository_owner == 'bitcompat' }}
           tags: |
             ${{ inputs.latest && 'latest' || '' }}
-            ${{ steps.version-tags.outputs.result }}
+            ${{ steps.version-tags.outputs.tags }}
             type=sha
             type=sha,format=long
 
