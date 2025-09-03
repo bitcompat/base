@@ -136,10 +136,22 @@ jobs:
         with:
           result-encoding: string
           script: |
+            let retVal = "";
             const { REVISION: revision, VERSION: version, CODENAME: codename, MAJOR_ONLY: majorOnly } = process.env;
-            const [ major, minor, patch ] = version.split('.').filter(V => '' !== V);
+            let [ major, minor, patch ] = version.split('.').filter(V => '' !== V);
+            if (major === undefined) {
+              throw new Error('Invalid version number');
+            }
+            if (minor === undefined) {
+              minor = 0;
+            }
+            if (patch === undefined) {
+              patch = 0;
+              retVal += `
+                ${major}.${minor}-${codename}-r${revision}`;
+            }
             
-            return `
+            return retVal + `
             ${major}.${minor}.${patch}-${codename}-r${revision}
             ${major}.${minor}.${patch}-${codename}
             ${major}.${minor}.${patch}
