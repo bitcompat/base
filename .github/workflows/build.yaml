@@ -142,7 +142,7 @@ jobs:
             image=moby/buildkit:v0.23.2
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         if: github.repository_owner == 'bitcompat'
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
