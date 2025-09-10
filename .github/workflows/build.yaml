@@ -179,7 +179,6 @@ jobs:
 
       - name: Build and Push container images
         uses: docker/build-push-action@v6
-        id: build-and-push
         with:
           platforms: linux/amd64,linux/arm64
           build-args: |-
@@ -200,11 +199,15 @@ jobs:
         run: crane auth login public.ecr.aws -u "${{ steps.login-ecr.outputs.docker_username_public_ecr_aws }}" -p "${{ steps.login-ecr.outputs.docker_password_public_ecr_aws }}"
 
       - name: Flatten images
+        id: flatten_images
         run: |
-          echo $DOCKER_METADATA_OUTPUT_JSON | jq -r '.tags[]' | 
-            while read -r IMG; do
-              crane flatten "$IMG"
-            done
+          set -ex
+          DIGEST=""
+          while read -r IMG; do
+            export OUT=$(crane flatten "$IMG")
+            DIGEST=$(echo "$OUT" | awk 'END{print}' | cut -d'@' -f2)
+          done <<< $(echo $DOCKER_METADATA_OUTPUT_JSON | jq -r '.tags[]')
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
 
       - name: Sign image with a key
         run: |
@@ -216,6 +219,6 @@ jobs:
         if: ${{ inputs.push == true }}
         env:
           TAGS: ${{ steps.docker_meta.outputs.tags }}
-          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+          DIGEST: ${{ steps.flatten_images.outputs.digest }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
