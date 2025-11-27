@@ -205,20 +205,19 @@ jobs:
           DIGEST=""
           while read -r IMG; do
             export OUT=$(crane flatten "$IMG")
-            DIGEST=$(echo "$OUT" | awk 'END{print}' | cut -d'@' -f2)
+            DIGEST+="$IMG@$(echo "$OUT" | awk 'END{print}' | cut -d'@' -f2) "
           done <<< $(echo $DOCKER_METADATA_OUTPUT_JSON | jq -r '.tags[]')
           echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
 
       - name: Sign image with a key
         run: |
           images=""
-          for tag in ${TAGS}; do
-            images+="${tag}@${DIGEST} "
+          for tag in ${DIGEST}; do
+            images+="${tag} "
           done
           cosign sign --yes --key env://COSIGN_PRIVATE_KEY ${images}
         if: ${{ inputs.push == true }}
         env:
-          TAGS: ${{ steps.docker_meta.outputs.tags }}
           DIGEST: ${{ steps.flatten_images.outputs.digest }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
