@@ -70,7 +70,7 @@ jobs:
                     image=moby/buildkit:v${{ inputs.buildkit_version }}
 
           - name: Build and Push container images
-            uses: docker/build-push-action@v6
+            uses: docker/build-push-action@v7
             with:
                 platforms: linux/amd64
                 build-args: |-
@@ -96,7 +96,7 @@ jobs:
                     image=moby/buildkit:v${{ inputs.buildkit_version }}
 
           - name: Build and Push container images
-            uses: docker/build-push-action@v6
+            uses: docker/build-push-action@v7
             with:
                 platforms: linux/arm64
                 build-args: |-
@@ -178,7 +178,7 @@ jobs:
             type=sha,format=long
 
       - name: Build and Push container images
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           platforms: linux/amd64,linux/arm64
           build-args: |-
