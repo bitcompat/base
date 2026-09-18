@@ -56,7 +56,7 @@ concurrency:
 jobs:
   build_package_amd64:
       name: Build AMD64 Image - ${{ inputs.name }}
-      runs-on: ubuntu-24.04
+      runs-on: ubuntu-26.04
 
       steps:
           - uses: actions/checkout@master
@@ -82,7 +82,7 @@ jobs:
 
   build_package_arm64:
       name: Build ARM64 Image - ${{ inputs.name }}
-      runs-on: ubuntu-24.04-arm
+      runs-on: ubuntu-26.04-arm
 
       steps:
           - uses: actions/checkout@master
@@ -108,7 +108,7 @@ jobs:
 
   build_package:
     name: Build package - ${{ inputs.name }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs:
         - build_package_amd64
         - build_package_arm64
