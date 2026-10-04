@@ -88,7 +88,7 @@ jobs:
 
           - name: Checkout compatibility tests
             if: ${{ vars.BITCOMPAT_DATABASE_COMPATIBILITY == 'true' && inputs.compatibility-service != '' }}
-            uses: actions/checkout@v6
+            uses: actions/checkout@v7
             with:
                 repository: bitcompat/base
                 ref: main
@@ -144,7 +144,7 @@ jobs:
 
           - name: Checkout compatibility tests
             if: ${{ vars.BITCOMPAT_DATABASE_COMPATIBILITY == 'true' && inputs.compatibility-service != '' }}
-            uses: actions/checkout@v6
+            uses: actions/checkout@v7
             with:
                 repository: bitcompat/base
                 ref: main
