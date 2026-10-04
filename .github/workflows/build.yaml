@@ -43,11 +43,11 @@ on:
         default: 0.23.2
     secrets:
       AWS_ROLE_ARN:
-        required: true
+        required: false
       COSIGN_PRIVATE_KEY:
-        required: true
+        required: false
       COSIGN_PASSWORD:
-        required: true
+        required: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.number || github.ref }}-${{ inputs.name }}-${{ inputs.cache-scope }}
@@ -124,6 +124,7 @@ jobs:
           fetch-depth: 1
 
       - name: Install Cosign
+        if: ${{ inputs.push == true }}
         uses: sigstore/cosign-installer@main
 
       - uses: bitcompat/compute-ghcr-revision-action@v1
@@ -143,7 +144,7 @@ jobs:
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6
-        if: github.repository_owner == 'bitcompat'
+        if: ${{ inputs.push == true && github.repository_owner == 'bitcompat' }}
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-1
@@ -151,7 +152,7 @@ jobs:
       - name: Login to Amazon ECR Public
         uses: aws-actions/amazon-ecr-login@v2
         id: login-ecr
-        if: github.repository_owner == 'bitcompat'
+        if: ${{ inputs.push == true && github.repository_owner == 'bitcompat' }}
         with:
           registry-type: public
           mask-password: 'true'
@@ -193,20 +194,26 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ inputs.cache-scope }}
 
       - name: Setup CRANE
+        if: ${{ inputs.push == true }}
         uses: imjasonh/setup-crane@v0.7
 
       - name: Login to ECR Public in CRANE
+        if: ${{ inputs.push == true && github.repository_owner == 'bitcompat' }}
         run: crane auth login public.ecr.aws -u "${{ steps.login-ecr.outputs.docker_username_public_ecr_aws }}" -p "${{ steps.login-ecr.outputs.docker_password_public_ecr_aws }}"
 
       - name: Flatten images
+        if: ${{ inputs.push == true }}
         id: flatten_images
         run: |
-          set -ex
+          set -euo pipefail
           DIGEST=""
+          TAGS=$(echo "$DOCKER_METADATA_OUTPUT_JSON" | jq -r '.tags[]')
           while read -r IMG; do
-            export OUT=$(crane flatten "$IMG")
-            DIGEST+="$IMG@$(echo "$OUT" | awk 'END{print}' | cut -d'@' -f2) "
-          done <<< $(echo $DOCKER_METADATA_OUTPUT_JSON | jq -r '.tags[]')
+            OUT=$(crane flatten "$IMG")
+            HASH=$(echo "$OUT" | awk 'END{print}' | cut -d'@' -f2)
+            [[ "$HASH" =~ ^sha256:[a-f0-9]{64}$ ]]
+            DIGEST+="$IMG@$HASH "
+          done <<< "$TAGS"
           echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
 
       - name: Sign image with a key
