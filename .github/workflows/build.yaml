@@ -37,6 +37,10 @@ on:
         type: boolean
         required: false
         default: false
+      compatibility-service:
+        type: string
+        required: false
+        default: ''
       buildkit_version:
         type: string
         required: false
@@ -77,8 +81,38 @@ jobs:
                     ${{ inputs.build-args }}
                     BUILD_VERSION=${{ inputs.version }}
                 push: false
+                load: ${{ vars.BITCOMPAT_DATABASE_COMPATIBILITY == 'true' && inputs.compatibility-service != '' }}
+                tags: bitcompat-under-test:local
                 cache-from: type=gha,scope=${{ inputs.cache-scope }}
                 cache-to: type=gha,mode=max,scope=${{ inputs.cache-scope }}
+
+          - name: Checkout compatibility tests
+            if: ${{ vars.BITCOMPAT_DATABASE_COMPATIBILITY == 'true' && inputs.compatibility-service != '' }}
+            uses: actions/checkout@v6
+            with:
+                repository: bitcompat/base
+                ref: main
+                path: .bitcompat-compatibility
+                sparse-checkout: tests/compatibility
+                persist-credentials: false
+
+          - name: Test container compatibility
+            if: ${{ vars.BITCOMPAT_DATABASE_COMPATIBILITY == 'true' && inputs.compatibility-service != '' }}
+            run: >-
+                python3 .bitcompat-compatibility/tests/compatibility/run.py
+                --service "${{ inputs.compatibility-service }}"
+                --candidate bitcompat-under-test:local
+                --version "${{ inputs.version }}"
+                --platform linux/amd64
+                --report compatibility-report.json
+
+          - name: Upload compatibility report
+            if: ${{ always() && vars.BITCOMPAT_DATABASE_COMPATIBILITY == 'true' && inputs.compatibility-service != '' }}
+            uses: actions/upload-artifact@v7
+            with:
+                name: compatibility-${{ inputs.name }}-${{ inputs.version }}-amd64
+                path: compatibility-report.json
+                if-no-files-found: warn
 
   build_package_arm64:
       name: Build ARM64 Image - ${{ inputs.name }}
@@ -103,8 +137,38 @@ jobs:
                     ${{ inputs.build-args }}
                     BUILD_VERSION=${{ inputs.version }}
                 push: false
+                load: ${{ vars.BITCOMPAT_DATABASE_COMPATIBILITY == 'true' && inputs.compatibility-service != '' }}
+                tags: bitcompat-under-test:local
                 cache-from: type=gha,scope=${{ inputs.cache-scope }}-arm
                 cache-to: type=gha,mode=max,scope=${{ inputs.cache-scope }}-arm
+
+          - name: Checkout compatibility tests
+            if: ${{ vars.BITCOMPAT_DATABASE_COMPATIBILITY == 'true' && inputs.compatibility-service != '' }}
+            uses: actions/checkout@v6
+            with:
+                repository: bitcompat/base
+                ref: main
+                path: .bitcompat-compatibility
+                sparse-checkout: tests/compatibility
+                persist-credentials: false
+
+          - name: Test container compatibility
+            if: ${{ vars.BITCOMPAT_DATABASE_COMPATIBILITY == 'true' && inputs.compatibility-service != '' }}
+            run: >-
+                python3 .bitcompat-compatibility/tests/compatibility/run.py
+                --service "${{ inputs.compatibility-service }}"
+                --candidate bitcompat-under-test:local
+                --version "${{ inputs.version }}"
+                --platform linux/arm64
+                --report compatibility-report.json
+
+          - name: Upload compatibility report
+            if: ${{ always() && vars.BITCOMPAT_DATABASE_COMPATIBILITY == 'true' && inputs.compatibility-service != '' }}
+            uses: actions/upload-artifact@v7
+            with:
+                name: compatibility-${{ inputs.name }}-${{ inputs.version }}-arm64
+                path: compatibility-report.json
+                if-no-files-found: warn
 
   build_package:
     name: Build package - ${{ inputs.name }}

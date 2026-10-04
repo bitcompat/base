@@ -1,0 +1,44 @@
+{
+  "postgresql": {
+    "17.6": {
+      "image": "docker.io/bitnamilegacy/postgresql@sha256:926356130b77d5742d8ce605b258d35db9b62f2f8fd1601f9dbaef0c8a710a8d",
+      "tag_at_lock": "17.6.0-debian-12-r4",
+      "locked_at": "2026-10-04",
+      "platform_digests": {
+        "amd64": "sha256:42ce087c029b3b61cfb10230c571172f41a5bf2d463871a61bde314b59fa197f",
+        "arm64": "sha256:6c1c9adfd396e78d3a26a13a5c0ab0188a44c701e47ff1fdd86aadd82b0e072a"
+      }
+    }
+  },
+  "redis": {
+    "8.0.3": {
+      "image": "docker.io/bitnamilegacy/redis@sha256:a7751bda1b64348a2d6322eee1f124fafd27ac0d404d051d27d24f781e64ace9",
+      "tag_at_lock": "8.0.3-debian-12-r3",
+      "locked_at": "2026-10-04",
+      "platform_digests": {
+        "amd64": "sha256:736b49cc2dc6158da7140aa28bc1d31ed0a8e694b4dd8067124333fece607e88",
+        "arm64": "sha256:ffedbeb0a0efbf1b7444750e97017d51ad3d22329b5264ac081c7e7147ef43ef"
+      }
+    },
+    "8.2.1": {
+      "image": "docker.io/bitnamilegacy/redis@sha256:25bf63f3caf75af4628c0dfcf39859ad1ac8abe135be85e99699f9637b16dc28",
+      "tag_at_lock": "8.2.1-debian-12-r0",
+      "locked_at": "2026-10-04",
+      "platform_digests": {
+        "amd64": "sha256:74ab6cfca061752e8d784787db08a0e9003980f07d38fc33ca592574587f5a6f",
+        "arm64": "sha256:c8b7aa71fef3b4eb105f52c27d8e92b5570aeda2d7ef1603c3fba0e49fbcd6f5"
+      }
+    }
+  },
+  "mysql": {
+    "8.4.5": {
+      "image": "docker.io/bitnamilegacy/mysql@sha256:7089d796fc9b4629a628bd445e4afabe607351ee665444c3197bdeaed812ea65",
+      "tag_at_lock": "8.4.5-debian-12-r0",
+      "locked_at": "2026-10-04",
+      "platform_digests": {
+        "amd64": "sha256:50a651625c48b16104d11a1fa1fd97cfa85a12398deb6ccdb9f51afcf87de9e5",
+        "arm64": "sha256:9120fcf99f81e0babca09fb2aa6fe8cfaefd33d52ebac9fa7d64f305b3212323"
+      }
+    }
+  }
+}
