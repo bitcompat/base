@@ -3,7 +3,7 @@ import io
 from pathlib import Path
 import tarfile
 import tempfile
-from compare import differences, filesystem
+from compare import differences, filesystem, size_comparison
 
 with tempfile.TemporaryDirectory() as directory:
     archive = Path(directory) / 'image.tar'
@@ -25,4 +25,10 @@ with tempfile.TemporaryDirectory() as directory:
     assert diff['/extra']['reference'] is None
     assert differences(tree, tree) == {}
     assert differences({'ENV': 'old'}, {'ENV': 'new'})['ENV']['candidate'] == 'new'
-print('Tree and difference regression check passed')
+reference = {'layer_count': 1, 'size_bytes': 100}
+assert size_comparison(reference, {'layer_count': 1, 'size_bytes': 80})['delta_percent'] == -20
+# A small multi-layer build must not be reported as smaller than a flat image.
+pending = size_comparison(reference, {'layer_count': 2, 'size_bytes': 50})
+assert pending['status'] == 'requires-flatten' and 'delta_percent' not in pending
+assert size_comparison({'layer_count': 2}, {'layer_count': 1})['status'] == 'requires-flatten'
+print('Tree, difference and flattened-size regression check passed')

@@ -43,8 +43,15 @@ Outputs: `reference.json`, `candidate.json`, and `comparison.json`.
   For PHP-FPM use `--configure-command 'php -i | sed -n "/^Configure Command/p"'`.
   An absent command or empty output does not establish matching compile flags.
   A failing supplied command fails the run. Reports retain the raw output.
-- Size: Docker image inspect `Size` in bytes, delta and percentage. This is the
-  local uncompressed image size, not compressed registry download size.
+- Size: compare Docker image inspect `Size` only after both images are flattened
+  to one layer, as in the publication workflow's `crane flatten`. Snapshots record
+  `layer_count`; if either image has multiple layers, size reports
+  `status: requires-flatten` and omits the delta. It is the uncompressed size of
+  the flattened image, not compressed registry transfer size. The comparator
+  never flattens or publishes images itself: flatten local candidates into a
+  temporary local registry with crane, then load them before comparison. Do not
+  run `crane flatten` against an official or production reference: without a
+  destination override, crane writes back to its source repository.
 
 Exit 1 means execution/lifecycle failed. Exit 0 means collection and lifecycle
 checks succeeded, with status `review-required`: differences still need review.

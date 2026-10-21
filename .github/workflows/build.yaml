@@ -26,6 +26,7 @@ on:
         default: false
         required: false
       revision:
+        description: "Deprecated and ignored. Revision is computed from GHCR tags for the version and codename."
         type: string
         required: false
         default: '1'
@@ -80,6 +81,7 @@ jobs:
                 build-args: |-
                     ${{ inputs.build-args }}
                     BUILD_VERSION=${{ inputs.version }}
+                    IMAGE_REVISION=0
                 push: false
                 load: ${{ vars.BITCOMPAT_DATABASE_COMPATIBILITY == 'true' && inputs.compatibility-service != '' }}
                 tags: bitcompat-under-test:local
@@ -136,6 +138,7 @@ jobs:
                 build-args: |-
                     ${{ inputs.build-args }}
                     BUILD_VERSION=${{ inputs.version }}
+                    IMAGE_REVISION=0
                 push: false
                 load: ${{ vars.BITCOMPAT_DATABASE_COMPATIBILITY == 'true' && inputs.compatibility-service != '' }}
                 tags: bitcompat-under-test:local
@@ -249,6 +252,7 @@ jobs:
           build-args: |-
             ${{ inputs.build-args }}
             BUILD_VERSION=${{ inputs.version }}
+            IMAGE_REVISION=${{ inputs.push && steps.version-tags.outputs.revision || '0' }}
           push: ${{ inputs.push }}
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}

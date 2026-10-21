@@ -30,6 +30,18 @@ def differences(reference, candidate):
             if reference.get(key) != candidate.get(key)}
 
 
+def size_comparison(reference, candidate):
+    counts = {key: value['layer_count'] for key, value in
+              [('reference', reference), ('candidate', candidate)]}
+    if any(count != 1 for count in counts.values()):
+        return {'status': 'requires-flatten', 'layer_counts': counts}
+    delta = candidate['size_bytes'] - reference['size_bytes']
+    return {'status': 'flattened', 'layer_counts': counts,
+            'reference_bytes': reference['size_bytes'],
+            'candidate_bytes': candidate['size_bytes'], 'delta_bytes': delta,
+            'delta_percent': 100 * delta / reference['size_bytes'] if reference['size_bytes'] else None}
+
+
 def filesystem(archive):
     # Compare the tree, not binary hashes: compiled binaries differ across builds.
     tree = {}
@@ -49,6 +61,7 @@ def snapshot(image, args):
     config = metadata['Config']
     result = {'id': metadata['Id'], 'digests': metadata.get('RepoDigests', []),
               'platform': args.platform, 'size_bytes': metadata['Size'],
+              'layer_count': len(metadata['RootFS'].get('Layers', [])),
               'config': {key: config.get(key) for key in
                          ['User', 'Entrypoint', 'Cmd', 'WorkingDir', 'Volumes',
                           'ExposedPorts', 'StopSignal']},
@@ -130,7 +143,7 @@ def main():
     args.output.mkdir(parents=True, exist_ok=False)
     report = {'status': 'failed', 'reference': args.reference, 'candidate': args.candidate,
               'platform': args.platform, 'filesystem_scope': 'pre-start docker export; volume contents excluded',
-              'size_measure': 'Docker inspect Size: local uncompressed image, not registry transfer size'}
+              'size_measure': 'Docker inspect Size after flatten (one layer required); uncompressed, not registry transfer size'}
     try:
         reference = snapshot(args.reference, args)
         (args.output / 'reference.json').write_text(json.dumps(reference, indent=2) + '\n')
@@ -143,10 +156,7 @@ def main():
                                'available': bool(reference['configure'] and candidate['configure']),
                                'equal': reference['configure'] == candidate['configure'],
                                'reference': reference['configure'], 'candidate': candidate['configure']}
-        delta = candidate['size_bytes'] - reference['size_bytes']
-        report['size'] = {'reference_bytes': reference['size_bytes'],
-                          'candidate_bytes': candidate['size_bytes'], 'delta_bytes': delta,
-                          'delta_percent': 100 * delta / reference['size_bytes'] if reference['size_bytes'] else None}
+        report['size'] = size_comparison(reference, candidate)
         report['lifecycle'] = {key: {'startup': value['startup'], 'stop': value['stop'],
                                    'passed': value['lifecycle_passed']}
                                for key, value in [('reference', reference), ('candidate', candidate)]}
